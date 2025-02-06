@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To-Do List - Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f8f9fa;
+      }
+
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+      }
+
+      .todo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .todo-header h1 {
+        font-size: 2rem;
+      }
+
+      .input-group {
+        width: 100%;
+      }
+
+      .todo-list {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      .todo-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        background-color: white;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .todo-list li.done {
+        text-decoration: line-through;
+        background-color: #d4edda;
+      }
+
+      .todo-list .todo-item {
+        flex-grow: 1;
+        font-size: 1.2rem;
+      }
+
+      .todo-list button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: #007bff;
+      }
+
+      .todo-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .todo-footer p {
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="todo-header">
+        <h1>My To-Do List</h1>
+        <button
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#addTaskModal"
+        >
+          Add Task
+        </button>
+      </div>
+
+      <ul class="todo-list" id="todo-list">
+        <!-- Tasks will be dynamically added here -->
+      </ul>
+
+      <div class="todo-footer">
+        <p id="remaining-tasks">No tasks yet</p>
+      </div>
+    </div>
+
+    <!-- Modal for Adding a New Task -->
+    <div
+      class="modal fade"
+      id="addTaskModal"
+      tabindex="-1"
+      aria-labelledby="addTaskModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input
+              type="text"
+              id="task-input"
+              class="form-control"
+              placeholder="Enter task description"
+            />
+            <div class="mt-3">
+              <label for="task-date" class="form-label">Task Date</label>
+              <input type="date" id="task-date" class="form-control" />
+            </div>
+            <div class="mt-3">
+              <label for="task-time" class="form-label">Task Time</label>
+              <input type="time" id="task-time" class="form-control" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="add-task-button">
+              Add Task
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const addTaskButton = document.getElementById("add-task-button");
+      const taskInput = document.getElementById("task-input");
+      const taskDate = document.getElementById("task-date");
+      const taskTime = document.getElementById("task-time");
+      const todoList = document.getElementById("todo-list");
+      const remainingTasks = document.getElementById("remaining-tasks");
+
+      // Task array to store tasks with their dates and times
+      let tasks = [];
+
+      // Function to add a new task
+      addTaskButton.addEventListener("click", () => {
+        const taskDescription = taskInput.value;
+        const date = taskDate.value;
+        const time = taskTime.value;
+
+        if (taskDescription && date && time) {
+          const taskDateTime = new Date(`${date}T${time}:00`); // Create a date object
+
+          const newTask = {
+            description: taskDescription,
+            dateTime: taskDateTime,
+            done: false,
+          };
+
+          // Add the new task to the tasks array
+          tasks.push(newTask);
+
+          // Sort tasks by date and time
+          tasks.sort((a, b) => a.dateTime - b.dateTime);
+
+          // Clear the task input fields
+          taskInput.value = "";
+          taskDate.value = "";
+          taskTime.value = "";
+
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById("addTaskModal")
+          );
+          modal.hide();
+
+          renderTasks(); // Re-render the tasks
+        }
+      });
+
+      // Function to render tasks
+      function renderTasks() {
+        todoList.innerHTML = ""; // Clear existing tasks
+        tasks.forEach((task, index) => {
+          const taskElement = document.createElement("li");
+          taskElement.classList.add("todo-item");
+          if (task.done) taskElement.classList.add("done");
+
+          taskElement.innerHTML = `
+                    <span class="todo-item-text">${
+                      task.description
+                    } <br> <small>${task.dateTime.toLocaleString()}</small></span>
+                    <button class="mark-done btn btn-success">✓</button>
+                    <button class="delete btn btn-danger">✘</button>
+                `;
+          todoList.appendChild(taskElement);
+
+          // Mark task as done
+          const markDoneButton = taskElement.querySelector(".mark-done");
+          markDoneButton.addEventListener("click", () => {
+            task.done = !task.done;
+            renderTasks(); // Re-render tasks after updating
+          });
+
+          // Delete task
+          const deleteButton = taskElement.querySelector(".delete");
+          deleteButton.addEventListener("click", () => {
+            tasks.splice(index, 1); // Remove task from array
+            renderTasks(); // Re-render tasks after deleting
+          });
+        });
+
+        // Update remaining tasks count
+        remainingTasks.textContent = `${
+          tasks.filter((task) => !task.done).length
+        } tasks remaining`;
+      }
+    </script>
+  </body>
+</html>
